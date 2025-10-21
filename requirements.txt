@@ -1,0 +1,7 @@
+chromadb
+langchain
+langchain-community
+pypdf
+tqdm
+pandas 
+numpy
