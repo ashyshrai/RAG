@@ -1,13 +1,15 @@
 import chromadb
 import hashlib
-
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain.retrievers import BM25Retriever,EnsembleRetriever
+from langchain_community.vectorstores import Chroma
 
 
 # Connect to Chroma
 client = chromadb.HttpClient(host="localhost", port=8000)
 
 # Create or get a collection
-collection = client.get_or_create_collection("test_documents")
+collection = client.get_or_create_collection("test_documents_v2")
 
 topics = {
     "Science": [
@@ -68,9 +70,7 @@ topics = {
     ]
 }
 
-# Generate 100 unique entries (mixing from all topics)
 documents = []
-
 for topic, sentences in topics.items():
     for sentence in sentences:
         documents.append(sentence)
@@ -80,8 +80,13 @@ def doc_id(text):
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 ids = [doc_id(doc) for doc in documents]
 
+embedding_function = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+embeddings = [embedding_function.embed_query(text) for text in documents]
+
+
 collection.add(
     documents=documents,
+    embeddings=embeddings,
     ids=ids
 )
 
